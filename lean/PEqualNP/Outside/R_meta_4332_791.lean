@@ -2,6 +2,7 @@ import PEqualNP.Defs
 
 theorem PEqualNP.Outside.R_meta_4332_791
     (normalize :
+      let codes : List ℕ := [1, 12, 23, 34, 40, 5, 16, 27, 38, 57, 68, 85]
       let E : Finset (Sym2 (Fin 9)) := {s(0,1), s(1,2), s(2,3), s(3,4), s(4,0), s(0,5), s(1,6), s(2,7),
          s(3,8), s(5,7), s(6,8), s(8,5)}
       ∀ (C : PEqualNP.CircuitLowerBounds.Circuit) (i : ℕ) (b : Bool),
@@ -9,9 +10,7 @@ theorem PEqualNP.Outside.R_meta_4332_791
         (∀ z : Fin 10 → Bool, z 9 = false →
           (if b = true then !(C.wires (List.ofFn z)).getD i false
            else (C.wires (List.ofFn z)).getD i false) =
-          (z 0 && z 1 || z 1 && z 2 || z 2 && z 3 || z 3 && z 4 || z 4 && z 0 ||
-           z 0 && z 5 || z 1 && z 6 || z 2 && z 7 || z 3 && z 8 ||
-           z 5 && z 7 || z 6 && z 8 || z 8 && z 5)) →
+          codes.any (fun e => z (Fin.ofNat 10 (e / 10)) && z (Fin.ofNat 10 (e % 10)))) →
         ∃ (S : List (Finset (Fin 9))) (T : List (Fin 9 × Finset (Fin 9))),
         (∀ (P : List (Finset (Fin 9))) (U : Finset (Fin 9)) (Q : List (Finset (Fin 9))),
           S = P ++ U :: Q → ∃ A B : Finset (Fin 9),
@@ -38,6 +37,11 @@ theorem PEqualNP.Outside.R_meta_4332_791
   push Not at notWitness
   obtain ⟨S, T, gates, stars, edges, budget⟩ := normalize C i b fan (by
     intro z hz
-    simpa [f, hz] using notWitness z hz)
+    have e : f z = ([1, 12, 23, 34, 40, 5, 16, 27, 38, 57, 68, 85] : List ℕ).any
+        (fun k => z (Fin.ofNat 10 (k / 10)) && z (Fin.ofNat 10 (k % 10))) := by
+      simp only [f, hz, List.any_cons, List.any_nil, Bool.and_false, Bool.false_and,
+        Bool.or_false, Bool.false_or, Bool.or_assoc]
+      rfl
+    exact (notWitness z hz).trans e)
   have lower := count S T gates stars edges
   omega
